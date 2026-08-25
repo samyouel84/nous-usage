@@ -46,7 +46,7 @@ python3 nous_usage_server.py --port 8765
 
 | Endpoint | Returns |
 |----------|---------|
-| `GET /usage` | JSON snapshot: `spend_usd`, `cap_usd`, `pct`, `days_left`, `on_pace_usd`, `period_end`, `total_tokens`, `today_tokens`, `models[]` |
+| `GET /usage` | JSON snapshot: `spend_usd`, `cap_usd`, `pct`, `credits_remaining`, `rollover_credits`, `monthly_credits`, `purchased_credits`, `total_usable_credits`, `days_left`, `on_pace_usd`, `period_end`, `total_tokens`, `today_tokens`, `models[]` |
 | `GET /` | small HTML status page for a quick browser check |
 
 Example:
