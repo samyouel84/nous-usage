@@ -14,6 +14,10 @@ Endpoints:
 Run:
     python3 nous_usage_server.py --port 8765
 
+Security: binds to 127.0.0.1 (localhost) by default so it never exposes your
+personal usage over the network. Override with --host only if you understand
+the risk of serving your subscription data to other machines.
+
 Zero dependencies — pure Python 3 stdlib (http.server + urllib + sqlite3).
 """
 
@@ -267,10 +271,13 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--host", type=str, default="127.0.0.1",
+                    help="Bind address (default: 127.0.0.1 — localhost only). "
+                         "Only set this to reach it from other machines.")
     args = ap.parse_args()
 
-    server = ThreadingHTTPServer(("0.0.0.0", args.port), Handler)
-    print(f"[nous-usage] server listening on 0.0.0.0:{args.port}")
+    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    print(f"[nous-usage] server listening on {args.host}:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

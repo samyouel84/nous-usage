@@ -57,6 +57,12 @@ curl -s localhost:8765/usage | python3 -m json.tool
 
 The Portal fetch is cached for 5 minutes so polling clients don't hammer the API.
 
+> **Security:** the server binds to `127.0.0.1` (localhost) by default, so it never exposes
+> your personal usage over the network. To reach it from another machine you must
+> explicitly pass `--host 0.0.0.0` — only do this on a trusted network, and be aware
+> it serves *your* subscription spend and model usage to whoever can reach the port.
+> This tool is for your own tracking; it is not a service to host for others.
+
 ---
 
 ## Requirements
