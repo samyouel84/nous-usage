@@ -46,7 +46,7 @@ python3 nous_usage_server.py --port 8765
 
 | Endpoint | Returns |
 |----------|---------|
-| `GET /usage` | JSON snapshot: `spend_usd`, `cap_usd`, `pct`, `credits_remaining`, `rollover_credits`, `monthly_credits`, `purchased_credits`, `total_usable_credits`, `days_left`, `on_pace_usd`, `period_end`, `total_tokens`, `today_tokens`, `models[]` |
+| `GET /usage` | JSON snapshot: `spend_usd`, `cap_usd`, `pct`, `credits_remaining`, `rollover_credits`, `monthly_credits`, `purchased_credits`, `total_usable_credits`, `days_left`, `on_pace_usd`, `pace_early`, `pace_elapsed_days`, `pace_total_days`, `period_end`, `total_tokens`, `today_tokens`, `models[]` |
 | `GET /` | small HTML status page for a quick browser check |
 
 Example:
@@ -56,6 +56,15 @@ curl -s localhost:8765/usage | python3 -m json.tool
 ```
 
 The Portal fetch is cached for 5 minutes so polling clients don't hammer the API.
+
+**Pace projection & top-ups:** `on_pace_usd` is the burn-rate projection
+(`spend / elapsed-days × total-days`) against your available budget —
+`total_usable_credits` (monthly cap + any one-time top-ups). The projection is
+**suppressed until 20% of the period has elapsed** (`PACE_MIN_FRAC`): early in
+a period a tiny spend extrapolates to an alarming "OVER" number that is just
+noise, so `pace_early` is set and `on_pace_usd` is `null` until enough time
+has passed. `pace_elapsed_days` / `pace_total_days` tell you where in the
+period you are.
 
 > **Security:** the server binds to `127.0.0.1` (localhost) by default, so it never exposes
 > your personal usage over the network. To reach it from another machine you must
