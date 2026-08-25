@@ -119,6 +119,8 @@ def parse_subscription(payload: dict) -> dict:
     cap_exceeded = access.get("member_spend_cap_exceeded")
     active_sub = access.get("has_active_subscription")
     sub_is_paid = access.get("active_subscription_is_paid")
+    purchased = _as_float(access.get("purchased_credits_remaining"))
+    total_usable = _as_float(access.get("total_usable_credits"))
 
     return {
         "plan": plan,
@@ -127,6 +129,8 @@ def parse_subscription(payload: dict) -> dict:
         "period_end": period_end,
         "credits_remaining": _as_float(credits_remaining),
         "rollover_credits": _as_float(rollover),
+        "purchased_credits": purchased,
+        "total_usable_credits": total_usable,
         "spend_usd": spend_usd,
         "cap_usd": cap_usd,
         "cap_remaining_usd": cap_remaining,
@@ -264,6 +268,8 @@ def render_dashboard(usage: dict, account: dict, window_label: str, c: C) -> str
         charge = account.get("monthly_charge")
         spend = account.get("spend_usd")
         remain = account.get("credits_remaining")
+        purchased = account.get("purchased_credits")
+        total_usable = account.get("total_usable_credits")
         period_end = parse_period_end(account.get("period_end"))
         active = account.get("active_subscription")
 
@@ -271,12 +277,16 @@ def render_dashboard(usage: dict, account: dict, window_label: str, c: C) -> str
         charge_str = f"${charge:.0f}/mo" if charge else "—"
         spend_str = fmt_usd(spend) if spend is not None else "—"
         remain_str = fmt_usd(remain) if remain is not None else "—"
+        purchased_str = fmt_usd(purchased) if purchased is not None else "—"
+        total_str = fmt_usd(total_usable) if total_usable is not None else "—"
 
         lines.append(f"  Plan                {c.bold(plan_str):<28} Monthly       {c.bold(charge_str)}")
         status = "ACTIVE" if active else "inactive"
         status_col = c.green(status) if active else c.yellow(status)
         lines.append(f"  Subscription        {status_col:<28} Period end    {period_end}")
         lines.append(f"  Spent this period   {c.magenta(spend_str):<28} Credits left  {c.green(remain_str)}")
+        if purchased is not None and total_usable is not None:
+            lines.append(f"  Balance (usable)    {c.bold(total_str):<28} incl top-up   {c.green(purchased_str)}")
 
         if remain is not None and spend is not None:
             used = spend

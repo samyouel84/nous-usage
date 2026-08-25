@@ -221,6 +221,13 @@ def build_snapshot() -> dict:
         "spend_usd": spend if spend is not None else 0.0,
         "cap_usd": cap_eff,
         "pct": pct,
+        # Credit balance — the real "what's left" including any one-time
+        # top-up credits. Surfaced so a top-up shows up automatically.
+        "credits_remaining": _as_float(sub.get("credits_remaining")),
+        "rollover_credits": _as_float(sub.get("rollover_credits")),
+        "monthly_credits": _as_float(sub.get("monthly_credits")),
+        "purchased_credits": _as_float(access.get("purchased_credits_remaining")),
+        "total_usable_credits": _as_float(access.get("total_usable_credits")),
         "days_left": days_left,
         "on_pace_usd": on_pace,
         "period_end": sub.get("current_period_end"),
