@@ -1,0 +1,14 @@
+# Local Hermes/Nous data is never committed
+.hermes/
+auth.json
+state.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# macOS
+.DS_Store
