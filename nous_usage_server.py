@@ -44,6 +44,11 @@ DEFAULT_MONTHLY_CHARGE = 20.0
 _CACHE = {"ts": 0.0, "payload": None}
 CACHE_SECONDS = 300
 
+# Minimum fraction of the billing period that must have elapsed before the
+# burn-rate projection is trusted. Early in a period a tiny spend extrapolates
+# to a huge "OVER" number that is just noise; gate it to keep the display calm.
+PACE_MIN_FRAC = 0.2
+
 
 def _as_float(v):
     if v is None:
@@ -179,13 +184,25 @@ def build_snapshot() -> dict:
         days_left = max(0, (period_end - dt.datetime.now(period_end.tzinfo)).days)
 
     # Burn-rate projection: spend so far / days elapsed in period * total days.
+    # Gated on a minimum elapsed fraction — early in a period a tiny spend
+    # extrapolates to a huge (and alarming) "OVER" number that is just noise.
+    # Only report a projection once enough of the period has elapsed.
     on_pace = None
+    pace_early = False
+    pace_elapsed = None
+    pace_total = None
     if spend is not None and period_end is not None:
         now = dt.datetime.now(period_end.tzinfo)
         period_start = period_end.replace(day=1)
         total_days = max(1, (period_end - period_start).days)
         elapsed = max(0, (now - period_start).days) + 1
-        on_pace = spend / elapsed * total_days
+        pace_elapsed = elapsed
+        pace_total = total_days
+        raw = spend / elapsed * total_days
+        if elapsed / total_days >= PACE_MIN_FRAC:
+            on_pace = raw
+        else:
+            pace_early = True
 
     total_tokens = sum([
         usage.get("totals", {}).get("input_tokens") or 0,
@@ -230,6 +247,9 @@ def build_snapshot() -> dict:
         "total_usable_credits": _as_float(access.get("total_usable_credits")),
         "days_left": days_left,
         "on_pace_usd": on_pace,
+        "pace_early": pace_early,
+        "pace_elapsed_days": pace_elapsed,
+        "pace_total_days": pace_total,
         "period_end": sub.get("current_period_end"),
         "total_tokens": total_tokens,
         "today_tokens": today_tokens,
