@@ -257,6 +257,26 @@ def render_dashboard(usage: dict, account: dict, window_label: str, c: C) -> str
     lines.append(c.bold(c.cyan("║")) + " " * pad + c.bold(title) + " " * (W - 2 - pad - len(title)) + c.bold(c.cyan("║")))
     lines.append(c.bold(c.cyan("╚" + "═" * (W - 2) + "╝")))
 
+    # --- Headline: subscription-level spend against the monthly credit grant ---
+    if not account.get("error"):
+        spend = account.get("spend_usd")
+        remain = account.get("credits_remaining")
+        charge = account.get("monthly_charge")
+        # Actual monthly credit grant (Plus grants $22 on a $20 sub).
+        # Override with NOUS_SUB_GRANT env var if Portal changes the grant.
+        try:
+            grant = float(os.environ.get("NOUS_SUB_GRANT", "22.0"))
+        except ValueError:
+            grant = None
+        if spend is not None:
+            bucket = grant or charge or ((spend + remain) if remain is not None else None)
+            spend_str = fmt_usd(spend)
+            if bucket:
+                pct = (spend / bucket * 100.0)
+                lines.append(f"  Subscription spend:  {c.bold(spend_str)} of {fmt_usd(bucket)}  ({pct:.1f}%)")
+            else:
+                lines.append(f"  Subscription spend:  {c.bold(spend_str)}")
+
     # Subscription panel
     lines.append("")
     lines.append(c.bold(c.green("▌ Subscription")))
